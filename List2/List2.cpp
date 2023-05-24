@@ -1,8 +1,13 @@
 // List2
 #include <iostream>
 using namespace std;
+using std::cin;
+using std::cout;
+using std::endl;
 #define tab "\t"
 #define delimetr "-----------------------------------------------------------------------------------------------------"
+
+//#define BASE_CHECK
 
 class List 
 {
@@ -23,12 +28,63 @@ class List
         friend class List;
     }*Head, *Tail;
     size_t size;
+    class Iterator
+    {
+        Element* Temp;
+    public:
+        Iterator(Element* Temp):Temp(Temp)
+        {
+            cout << "ItConstructor\t" << this << endl;
+        }
+        ~Iterator()
+        {
+            cout << "ItDestructor\t" << this << endl;
+        }
+        Iterator& operator++()
+        {
+           Temp = Temp->pNext;
+           return *this;
+        }
+        Iterator& operator--()
+        {
+            Temp = Temp->pPrev;
+        }
+        bool operator==(const Iterator& other)const
+        {
+            return this->Temp == other.Temp;
+        }
+        bool operator!=(const Iterator& other)const
+        {
+            return this->Temp != other.Temp;
+        }
+        int& operator*()
+        {
+            return Temp->Data;
+        }
+        friend class List;
+    };
 public:
+    Iterator begin()
+    {
+        return Head;
+    }
+    Iterator end()
+    {
+        return nullptr;
+    }
+
     List()
     {
         Head = Tail = nullptr;
         size = 0;
         cout << "LConstructor:\t" << this << endl;
+    }
+    List(const initializer_list<int>& il) :List()
+    {
+        for (int const* it = il.begin(); it != il.end(); it++)
+        {
+            push_back(*it);
+        }
     }
     ~List()
     {
@@ -62,49 +118,79 @@ public:
     }
     void pop_front()
     {
-        if (Head == nullptr && Tail == nullptr)return;
-        Element* Temp = Head->pNext;
-        Temp->pPrev = nullptr;
-        delete Head;
-        Head = Temp;
-        Temp = nullptr;
+        if (Head == Tail)
+        {
+            delete Head;
+            Head = Tail = nullptr;
+            size=0;
+            return;
+        }
+        Head = Head->pPrev;
+        delete Head->pPrev;
+        Head->pPrev = nullptr;
         size--;
     }
     void pop_back()
     {
-        if (Head == nullptr && Tail == nullptr)return;
-        Element* Temp = Tail->pPrev;
-        Temp->pNext = nullptr;
-        delete Tail;
-        Tail = Temp;
-        Temp = nullptr;
+        if (Head == Tail)return pop_front();
+        Tail = Tail->pPrev;
+        delete Tail -> pNext;
+        Tail -> pNext = nullptr;
         size--;
+       
     }
     void insert(int Data, int Index)
     {
-        if (Index < size / 2)
+        if (Index == 0)pop_front();
+        if (Index == size)return push_back(Data);
+        if (Index > size)return;
+        Element* Temp;
+        if (Index < size / 2)   
         {   
-            Element* Temp = Head;
-            for (int i = 0; i < Index-1; i++)
+            Temp = Head;
+            for (int i = 0; i < Index; i++)
             {
                 Temp = Temp->pNext;
             }
-            Temp->pNext = new Element(Data, Temp->pNext->pNext, Temp);
-            Temp = nullptr;
-            size++;
         }
         else
         {
-            Element* Temp = Tail;
-            for (int i = 0; i < size / 2 - (Index - size / 2); i++)
+            Temp = Tail;
+            for (int i = 0; i < size-Index-1; i++)
             {
                 Temp = Temp->pPrev;
             }
-            Temp->pPrev = new Element(Data, Temp, Temp->pPrev->pPrev);
-            Temp = nullptr;
-            size++;
         }
+       Temp->pPrev =  Temp->pPrev->pNext=new Element(Data, Temp, Temp->pPrev);
+       /* New->pNext = Temp;
+        New->pPrev = Temp->pPrev;
+        Temp->pPrev->pNext = New;
+        Temp->pPrev = New;*/
+        size++;
     }
+    void erase(int Index)
+    {
+        Element* Temp;
+        if (Index == 0)return pop_front();
+        if (Index >= size)return;
+        if (Index == size-1)return pop_back();
+        if (Index < size / 2)
+        {
+            Temp = Head;
+            for (int i = 0; i < Index; i++)Temp = Temp->pNext;
+        }
+        else
+        {
+            Temp = Tail;
+            for (int i = 0; i < size - Index - 1; i++)Temp = Temp->pPrev;
+        }
+        Temp->pPrev->pNext = Temp->pNext;
+        Temp->pNext->pPrev = Temp->pPrev;
+        delete Temp;
+        size--;
+
+    }
+
     void Print()const
     {
         for (Element* Temp = Head; Temp; Temp = Temp->pNext)
@@ -128,12 +214,13 @@ public:
 int main()
 {
      setlocale(LC_ALL, "rus");
+#ifdef BASE_CHECK
      int n = 0;
      cout << "¬ведите размер списка: "; cin >> n;
      List list1;
      for (int i = 0; i < n; i++)
      {
-         list1.push_front(rand()%100);
+         list1.push_front(rand() % 100);
      }
      list1.Print();
      //list1.Reverse_Print();
@@ -148,7 +235,22 @@ int main()
      cout << delimetr;
      cout << delimetr;
      cout << endl;
-     list1.insert(12, 8);
+     int m = 0;
+     int value;
+     cout << "¬ведите индекс: "; cin >> m;
+     cout << "¬ведите значение: "; cin >> value;
+     list1.insert(value, m);
      list1.Print();
+     list1.Reverse_Print();
+     list1.erase(5);
+     list1.Print();
+#endif // 
+     List list = { 3,5,8,13,21 };
+     for (int i : list)
+     {
+         cout << i << tab;
+     }
+     cout << endl;
+     for(List::Iterator it=list.end()
 }
 
