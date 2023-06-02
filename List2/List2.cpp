@@ -1,5 +1,6 @@
 // List2
 #include <iostream>
+#include <ctime>
 using namespace std;
 using std::cin;
 using std::cout;
@@ -28,11 +29,13 @@ class List
         friend class List;
     }*Head, *Tail;
     size_t size;
+    
+public:
     class Iterator
     {
         Element* Temp;
     public:
-        Iterator(Element* Temp):Temp(Temp)
+        Iterator(Element* Temp) :Temp(Temp)
         {
             cout << "ItConstructor\t" << this << endl;
         }
@@ -42,12 +45,25 @@ class List
         }
         Iterator& operator++()
         {
-           Temp = Temp->pNext;
-           return *this;
+            Temp = Temp->pNext;
+            return *this;
+        }
+        Iterator& operator++(int)
+        {
+            Iterator old = *this;
+            Temp = Temp->pNext;
+            return old;
         }
         Iterator& operator--()
         {
             Temp = Temp->pPrev;
+            return *this;
+        }
+        Iterator& operator--(int)
+        {
+            Iterator old = *this;
+            Temp = Temp->pPrev;
+            return old;
         }
         bool operator==(const Iterator& other)const
         {
@@ -57,22 +73,84 @@ class List
         {
             return this->Temp != other.Temp;
         }
+        const int& operator*() const
+        {
+            return Temp->Data;
+        }
         int& operator*()
         {
             return Temp->Data;
         }
         friend class List;
     };
-public:
-    Iterator begin()
+    class ReverseIterator 
+    {
+        Element* Temp;
+    public:
+        ReverseIterator(Element* Temp) :Temp(Temp)
+        {
+            cout << "RItConstructor\t" << this << endl;
+        }
+        ~ReverseIterator()
+        {
+            cout << "RItDestructor\t" << this << endl;
+        }
+        ReverseIterator& operator++()
+        {
+            Temp = Temp->pPrev;
+            return *this;
+        }
+        ReverseIterator& operator++(int)
+        {
+            ReverseIterator old = *this;
+            Temp = Temp->pPrev;
+            return old;
+        }
+        ReverseIterator& operator--()
+        {
+            Temp = Temp->pNext;
+            return *this;
+        }
+        ReverseIterator& operator--(int)
+        {
+            ReverseIterator old = *this;
+            Temp = Temp->pNext;
+            return old;
+        }
+        bool operator==(const ReverseIterator& other)const
+        {
+            return this->Temp == other.Temp;
+        }
+        bool operator!=(const ReverseIterator& other)const
+        {
+            return this->Temp != other.Temp;
+        }
+        const int& operator*() const
+        {
+            return Temp->Data;
+        }
+        const int& operator*() const
+        {
+            return Temp->Data;
+        }
+        friend class List;
+    };
+    const Iterator begin() const
     {
         return Head;
     }
-    Iterator end()
+    const Iterator end() const
     {
         return nullptr;
     }
-
+    const ReverseIterator rbegin() const
+    {
+        return Tail;
+    }
+    const ReverseIterator rend() const
+    {
+        return nullptr;
+    }
     List()
     {
         Head = Tail = nullptr;
@@ -86,11 +164,25 @@ public:
             push_back(*it);
         }
     }
+    List(const List& other):List()
+    {
+        *this = other;
+        cout << "LCopyConstructor:\t" << this << endl;
+    }
     ~List()
     {
         cout << "LDestructor:\t" << this << endl;
     }
-
+    List& operator=(const List& other)
+    {
+        while (Head)pop_front();
+        for (Element* Temp = other.Head; Temp; Temp = Temp->pNext)
+        {
+            push_back(Temp->Data);
+        }
+        cout << "LCopyAssingment\t: " << this;
+        return *this;
+    }
     // Adding Elements:
     void push_front(int Data)
     {
@@ -210,7 +302,17 @@ public:
     }
 
 };
-
+List operator+(const List& left, const List& right)
+{
+    List cat = left;
+    for (List::Iterator it = right.begin(); it != right.end(); ++it)
+    {
+        cat.push_back(*it);
+    }
+    return cat;
+}
+//#define iterator_perfomens
+//#define iterator_check
 int main()
 {
      setlocale(LC_ALL, "rus");
@@ -245,12 +347,44 @@ int main()
      list1.erase(5);
      list1.Print();
 #endif // 
+#ifdef iterator_perfomens
+     clock_t t_start, t_end;
+     int summ = 0;
+     t_start = clock();
+
      List list = { 3,5,8,13,21 };
      for (int i : list)
      {
-         cout << i << tab;
+         //cout << i << tab;
+         summ += i;
      }
      cout << endl;
-     for(List::Iterator it=list.end()
+     t_end = clock();
+     cout << "Сумма нкайдена за: " << double(t_end - t_start) / CLOCKS_PER_SEC << " секунтд\n";
+     cout << delimetr << endl;
+     List::Iterator begin = list.rbegin();
+     List::Iterator end = list.rend();
+
+     for (List::Iterator it = begin; it != end; --it)
+     {
+         cout << *it << tab;
+     }
+#endif // iterator_perfomens
+#ifdef iterator_check
+     List list = { 3,5,8,13,21 };
+     List::ReverseIterator begin = list.rbegin();
+     List::ReverseIterator end = list.rend();
+     for (List::ReverseIterator it = begin; it != end; ++it)
+     {
+         cout << *it << tab;
+     }
+     cout << endl;
+#endif //  iterator_check
+     List list1 = { 3,5,8,13,21 };
+     for (int i : list1)cout << i << tab; cout << endl;
+     List list2 = { 33,55,89 };
+     for (int i : list2)cout << i << tab; cout << endl;
+     List list3 = list1 + list2;
+     for (int i : list3)cout << i << tab; cout << endl;
 }
 
